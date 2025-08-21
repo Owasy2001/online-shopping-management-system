@@ -1,0 +1,60 @@
+﻿@model List<Zaptech.Models.TopCustomerVM>
+
+@{
+    ViewBag.Title = "Top Customers";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Top Customers</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="@Url.Action("ExportTopCustomersPDF", "AdminAnalytics", new { days = ViewBag.Days })" class="btn btn-sm btn-danger">
+            <i class="bi bi-file-pdf"></i> Export PDF
+        </a>
+    </div>
+</div>
+
+@using (Html.BeginForm("TopCustomers", "AdminAnalytics", FormMethod.Get))
+{
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text">Last</span>
+                <input type="number" name="days" value="@ViewBag.Days" class="form-control" min="1" />
+                <span class="input-group-text">days</span>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary">Update</button>
+        </div>
+    </div>
+}
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Orders</th>
+                <th>Total Spent</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        <strong>@(item.Customer?.Name ?? "Unknown Customer")</strong><br />
+                        <small class="text-muted">@item.Customer?.UserName</small>
+                    </td>
+                    <td>@(item.Customer?.Email ?? "-")</td>
+                    <td>@(item.Customer?.Phone ?? "-")</td>
+                    <td>@item.OrderCount</td>
+                    <td>@item.TotalSpent.ToString("C")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,60 @@
+﻿@model Zaptech.Models.Product
+@{
+    ViewBag.Title = "Add Product";
+    Layout = "~/Views/Shared/_SellerLayout.cshtml";
+}
+<br />
+<div class="container">
+    <h2>Add New Product</h2>
+
+
+     @using (Html.BeginForm())
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Name)
+            @Html.TextBoxFor(model => model.Name, new { @class = "form-control" })
+            @Html.ValidationMessageFor(model => model.Name)
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Description)
+            @Html.TextAreaFor(model => model.Description, new { @class = "form-control" })
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Price)
+            @Html.TextBoxFor(model => model.Price, new { @class = "form-control" })
+            @Html.ValidationMessageFor(model => model.Price)
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Stock)
+            @Html.TextBoxFor(model => model.Stock, new { @class = "form-control" })
+            @Html.ValidationMessageFor(model => model.Stock)
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.CategoryId, "Category")
+            @Html.DropDownList("CategoryId", null, htmlAttributes: new { @class = "form-control" })
+            @Html.ValidationMessageFor(model => model.CategoryId)
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Image)
+            @Html.TextBoxFor(model => model.Image, new { @class = "form-control" })
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Brand_Name)
+            @Html.TextBoxFor(model => model.Brand_Name, new { @class = "form-control" })
+        </div>
+        <br />
+        <div class="card-footer">
+            <input type="submit" value="AddProduct" class="btn btn-primary" />
+            @Html.ActionLink("Cancel", "Dashboard", null, new { @class = "btn btn-secondary" })
+        </div>
+
+    }
+</div>

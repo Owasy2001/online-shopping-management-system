@@ -1,0 +1,114 @@
+﻿@model Zaptech.Models.Order
+
+@{
+    ViewBag.Title = "Order Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var hasReviews = ViewBag.HasReviews as Dictionary<int, bool> ?? new Dictionary<int, bool>();
+}
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3>Order #@Model.Id</h3>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>Order Information</h5>
+                    <p><strong>Date:</strong> @Model.Order_date.ToString("f")</p>
+                    <p><strong>Status:</strong> <span class="badge bg-@(Model.Status == "Completed" ? "success" : "warning")">@Model.Status</span></p>
+                    <p><strong>Total:</strong> $@Model.Total_ammount.ToString("0.00")</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>Payment Information</h5>
+                    @if (Model.Payment != null)
+                    {
+                        <p><strong>Status:</strong> <span class="badge bg-@(Model.Payment.Status == "Paid" ? "success" : "danger")">@Model.Payment.Status</span></p>
+                        <p><strong>Transaction ID:</strong> @Model.Payment.Transiction_Id</p>
+                        <p><strong>Paid At:</strong> @Model.Payment.Paid_at.ToString("f")</p>
+                    }
+                    else
+                    {
+                        <p class="text-danger">No payment information available</p>
+                    }
+                </div>
+            </div>
+
+            <h5 class="mt-4">Order Items</h5>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Total</th>
+                            <th>Review</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.OrderItems)
+                        {
+                            var product = item.Product ?? new Zaptech.Models.Product();
+                            var category = product.Category ?? new Zaptech.Models.Category();
+
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        @if (!string.IsNullOrEmpty(product.Image))
+                                        {
+                                            <img src="@product.Image" alt="@product.Name" style="width: 50px; height: 50px; object-fit: contain;">
+                                        }
+                                        <div class="ms-3">
+                                            <h6 class="mb-0">@product.Name</h6>
+                                            <small class="text-muted">@category.Name</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>$@item.Price.ToString("0.00")</td>
+                                <td>@item.Quantity</td>
+                                <td>$@((item.Price * item.Quantity).ToString("0.00"))</td>
+                                <td>
+                                    @if (hasReviews.ContainsKey(item.ProductId) && hasReviews[item.ProductId])
+                                    {
+                                        <span class="text-success">Reviewed</span>
+                                        @Html.ActionLink("View", "MyReviews", null, new { @class = "btn btn-sm btn-outline-info" })
+                                    }
+                                    else
+                                    {
+                                        @Html.ActionLink("Add Review", "AddReview", new { id = item.ProductId }, new { @class = "btn btn-sm btn-primary" })
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-4">
+                <a href="@Url.Action("OrderHistory", "Customer")" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Orders
+                </a>
+                @if (Model.Payment != null && Model.Payment.Status == "Paid")
+                {
+                    <button class="btn btn-primary download-receipt" data-order-id="@Model.Id">
+                        <i class="bi bi-download"></i> Download Receipt
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Download receipt
+            $('.download-receipt').click(function () {
+                var orderId = $(this).data('order-id');
+                window.location.href = '@Url.Action("DownloadReceipt", "Customer")?id=' + orderId;
+            });
+        });
+    </script>
+}

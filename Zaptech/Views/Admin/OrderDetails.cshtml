@@ -1,0 +1,166 @@
+﻿@model Zaptech.Models.Order
+
+@{
+    ViewBag.Title = "OrderDetails";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Order Details</h1>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Order Information</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Order ID:</dt>
+                        <dd class="col-sm-8">@Model.Id</dd>
+
+                        <dt class="col-sm-4">Customer:</dt>
+                        <dd class="col-sm-8">@Model.User.Name</dd>
+
+                        <dt class="col-sm-4">Email:</dt>
+                        <dd class="col-sm-8">@Model.User.Email</dd>
+
+                        <dt class="col-sm-4">Order Date:</dt>
+                        <dd class="col-sm-8">@Model.Order_date.ToString("MMM dd, yyyy hh:mm tt")</dd>
+
+                        <dt class="col-sm-4">Status:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge badge-@(Model.Status == "Completed" ? "success" :
+                                                   Model.Status == "Processing" ? "info" :
+                                                   Model.Status == "Cancelled" ? "danger" :
+                                                   Model.Status == "Refund Requested" ? "warning" : "secondary")">
+                                @Model.Status
+                            </span>
+                        </dd>
+                    </dl>
+
+                    @if (Model.Status == "Pending" || Model.Status == "Processing")
+                    {
+                        <div class="form-group">
+                            <label>Update Status:</label>
+                            <select class="form-control" id="statusSelect">
+                                <option value="Processing" @(Model.Status == "Processing" ? "selected" : "")>Processing</option>
+                                <option value="Completed" @(Model.Status == "Completed" ? "selected" : "")>Completed</option>
+                                <option value="Cancelled" @(Model.Status == "Cancelled" ? "selected" : "")>Cancelled</option>
+                            </select>
+                            <button class="btn btn-primary mt-2" onclick="updateStatus(@Model.Id)">Update</button>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Payment Information</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.Payment != null)
+                    {
+                        <dl class="row">
+                            <dt class="col-sm-4">Transaction ID:</dt>
+                            <dd class="col-sm-8">@Model.Payment.Transiction_Id</dd>
+
+                            <dt class="col-sm-4">Status:</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge badge-@(Model.Payment.Status == "Paid" ? "success" :
+                                                       Model.Payment.Status == "Refunded" ? "warning" : "danger")">
+                                    @Model.Payment.Status
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Paid At:</dt>
+                            <dd class="col-sm-8">@Model.Payment.Paid_at.ToString("MMM dd, yyyy hh:mm tt")</dd>
+
+                            <dt class="col-sm-4">Amount:</dt>
+                            <dd class="col-sm-8">$@Model.Total_ammount.ToString("N2")</dd>
+                        </dl>
+
+                        if (Model.Status == "Completed" && Model.Payment.Status == "Paid")
+                        {
+                            <button class="btn btn-warning" onclick="processRefund(@Model.Id)">Process Refund</button>
+                        }
+                    }
+                    else
+                    {
+                        <p>No payment information available.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Order Items</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.OrderItems)
+                                {
+                                    <tr>
+                                        <td>@item.Product.Name</td>
+                                        <td>$@item.Price.ToString("N2")</td>
+                                        <td>@item.Quantity</td>
+                                        <td>$@((item.Price * item.Quantity).ToString("N2"))</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="3" class="text-right">Subtotal:</th>
+                                    <th>$@Model.Total_ammount.ToString("N2")</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="@Url.Action("Orders")" class="btn btn-secondary">Back to Orders</a>
+</div>
+
+@section Scripts {
+    <script>
+        function updateStatus(orderId) {
+            var newStatus = $('#statusSelect').val();
+
+            $.post('@Url.Action("UpdateOrderStatus")', {
+                orderId: orderId,
+                status: newStatus
+            }).done(function (data) {
+                if (data.success) {
+                    toastr.success(data.message);
+                    setTimeout(function () {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    toastr.error(data.message);
+                }
+            }).fail(function () {
+                toastr.error('Error updating order status');
+            });
+        }
+
+        function processRefund(orderId) {
+            if (confirm('Are you sure you want to process a refund for this order?')) {
+                window.location.href = '@Url.Action("RefundRequests")?orderId=' + orderId;
+            }
+        }
+    </script>
+}

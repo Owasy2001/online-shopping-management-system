@@ -1,0 +1,142 @@
+﻿
+
+
+@model List<Zaptech.Models.Order>
+
+@{
+    ViewBag.Title = "RefundRequests";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Refund Requests</h1>
+
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-info">@TempData["Message"]</div>
+    }
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Order Date</th>
+                            <th>Amount</th>
+                            <th>Request Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model)
+                        {
+                            <tr>
+                                <td>@order.Id</td>
+                                <td>@order.User.Name</td>
+                                <td>@order.Order_date.ToString("MMM dd, yyyy")</td>
+                                <td>$@order.Total_ammount.ToString("N2")</td>
+                                <td>@order.Payment.Paid_at.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    <button class="btn btn-sm btn-success" data-toggle="modal" data-target="#approveModal"
+                                            data-orderid="@order.Id">
+                                        Approve
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#rejectModal"
+                                            data-orderid="@order.Id">
+                                        Reject
+                                    </button>
+                                    <a href="@Url.Action("OrderDetails", new { id = order.Id })" class="btn btn-sm btn-info">
+                                        Details
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <a href="@Url.Action("Orders")" class="btn btn-secondary">Back to Orders</a>
+</div>
+
+<!-- Approve Refund Modal -->
+<div class="modal fade" id="approveModal" tabindex="-1" role="dialog" aria-labelledby="approveModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="approveModalLabel">Approve Refund</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            @using (Html.BeginForm("ProcessRefund", "Admin", FormMethod.Post))
+            {
+                <div class="modal-body">
+                    <p>Are you sure you want to approve this refund request?</p>
+                    <input type="hidden" name="orderId" id="approveOrderId" />
+                    <input type="hidden" name="approve" value="true" />
+                    <div class="form-group">
+                        <label for="approveReason">Reason (optional):</label>
+                        <textarea class="form-control" id="approveReason" name="reason" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Approve Refund</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Reject Refund Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rejectModalLabel">Reject Refund</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            @using (Html.BeginForm("ProcessRefund", "Admin", FormMethod.Post))
+            {
+                <div class="modal-body">
+                    <p>Are you sure you want to reject this refund request?</p>
+                    <input type="hidden" name="orderId" id="rejectOrderId" />
+                    <input type="hidden" name="approve" value="false" />
+                    <div class="form-group">
+                        <label for="rejectReason">Reason (optional):</label>
+                        <textarea class="form-control" id="rejectReason" name="reason" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Reject Refund</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $('#approveModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var orderId = button.data('orderid');
+            var modal = $(this);
+            modal.find('#approveOrderId').val(orderId);
+        });
+
+        $('#rejectModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var orderId = button.data('orderid');
+            var modal = $(this);
+            modal.find('#rejectOrderId').val(orderId);
+        });
+    </script>
+}

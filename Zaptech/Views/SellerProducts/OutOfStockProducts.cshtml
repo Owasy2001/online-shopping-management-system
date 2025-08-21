@@ -1,0 +1,129 @@
+﻿@model PagedList.IPagedList<Zaptech.Models.Product>
+@using PagedList.Mvc
+@{
+    ViewBag.Title = "Out of Stock Products";
+    Layout = "~/Views/Shared/_SellerLayout.cshtml";
+}
+
+<br />
+<br />
+
+<div class="card shadow-sm rounded">
+    <div class="card-header d-flex justify-content-between align-items-center bg-warning text-dark">
+        <h3 class="card-title mb-0">⚠️ Out of Stock Products</h3>
+        <div>
+            
+                <a href="@Url.Action("ExportOutOfStockProductsPDF", "SellerProducts")"
+                   class="btn btn-danger">
+                    <i class="bi bi-file-pdf"></i> Export to PDF
+                </a>
+            
+
+            <a href="@Url.Action("AddProduct", "Seller")" class="btn btn-dark btn-sm">
+                <i class="bi bi-plus-lg"></i> Add Product
+            </a>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                   
+                                   <div>
+                                        <strong>@item.Name</strong><br />
+                                        <small class="text-muted">@((item.Description != null && item.Description.Length > 50) ? item.Description.Substring(0, 50) + "..." : item.Description)</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>@(item.Category?.Name ?? "N/A")</td>
+                            <td>$@item.Price.ToString("0.00")</td>
+                            <td>
+                                <span class="badge rounded-pill bg-danger">
+                                    @item.Stock
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm @(item.IsActive ? "btn-success" : "btn-secondary") toggle-status"
+                                        data-id="@item.Id">
+                                    @(item.IsActive ? "Active" : "Inactive")
+                                </button>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group" aria-label="Actions">
+                                    <a href="@Url.Action("EditProduct", "Seller", new { id = item.Id })"
+                                       class="btn btn-outline-primary" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="@Url.Action("DeleteProduct", "Seller", new { id = item.Id })"
+                                       class="btn btn-outline-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-3 d-flex justify-content-center">
+            @Html.PagedListPager(Model, page => Url.Action("OutOfStockProducts", new { page }),
+                          new PagedListRenderOptions
+                          {
+                              UlElementClasses = new[] { "pagination pagination-sm" },
+                              LiElementClasses = new[] { "page-item" },
+                              FunctionToTransformEachPageLink = (liTag, aTag) =>
+                              {
+                                  aTag.AddCssClass("page-link");
+                                  liTag.InnerHtml = aTag.ToString();
+                                  return liTag;
+                              },
+                              DisplayLinkToFirstPage = PagedListDisplayMode.IfNeeded,
+                              DisplayLinkToLastPage = PagedListDisplayMode.IfNeeded,
+                              DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+                              DisplayLinkToNextPage = PagedListDisplayMode.Always,
+                              MaximumPageNumbersToDisplay = 5
+                          })
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.toggle-status').click(function () {
+                var button = $(this);
+                var id = button.data('id');
+
+                $.post('@Url.Action("ToggleProductStatus", "Seller")', { id: id }, function (data) {
+                    if (data.success) {
+                        button.text(data.message);
+                        button.toggleClass('btn-success btn-secondary');
+                        toastr.success('Status updated successfully');
+                    } else {
+                        toastr.error(data.message);
+                    }
+                }).fail(function () {
+                    toastr.error('Error updating status');
+                });
+            });
+        });
+    </script>
+}
+

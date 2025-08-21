@@ -1,0 +1,120 @@
+﻿@model Zaptech.Models.Order
+
+@if (Model == null || Model.OrderItems.Count == 0)
+{
+    <div class="alert alert-info">Your cart is empty</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.OrderItems)
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <img src="@item.Product.Image" alt="@item.Product.Name" style="width: 50px; height: 50px; object-fit: contain;" class="me-3">
+                                <div>@item.Product.Name</div>
+                            </div>
+                        </td>
+                        <td class="cart-item-price" data-price="@item.Price">$@item.Price.ToString("0.00")</td>
+                        <td>
+                            <div class="input-group" style="width: 120px;">
+                                <button class="btn btn-outline-secondary update-quantity" type="button" data-item-id="@item.Id" data-change="-1">-</button>
+                                <input type="number" class="form-control text-center quantity" value="@item.Quantity" min="1" max="@(item.Product.Stock + item.Quantity)">
+                                <button class="btn btn-outline-secondary update-quantity" type="button" data-item-id="@item.Id" data-change="1">+</button>
+                            </div>
+                        </td>
+                        <td>$@((item.Price * item.Quantity).ToString("0.00"))</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm remove-item" data-item-id="@item.Id">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        $(function() {
+            // Update quantity
+            $('.update-quantity').click(function() {
+                var itemId = $(this).data('item-id');
+                var change = $(this).data('change');
+                var input = $(this).siblings('.quantity');
+                var newQty = parseInt(input.val()) + change;
+
+                if (newQty < 1) newQty = 1;
+                input.val(newQty);
+
+                $.ajax({
+                    url: '@Url.Action("UpdateCartItem", "Customer")',
+                    type: 'POST',
+                    data: {
+                        itemId: itemId,
+                        newQuantity: newQty
+                    },
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Update the cart display
+                            loadCart();
+                            updateCartTotal(response.newTotal);
+                        } else {
+                            alert(response.message || 'Error updating quantity');
+                            loadCart(); // Refresh to get correct values
+                        }
+                    },
+                    error: function() {
+                        alert('Error updating quantity');
+                        loadCart(); // Refresh to get correct values
+                    }
+                });
+            });
+
+           // Update the remove item handler in _CartItems.cshtml
+$('.remove-item').click(function() {
+    if (!confirm('Are you sure you want to remove this item?')) return;
+
+    var itemId = $(this).data('item-id');
+
+    $.ajax({
+        url: '@Url.Action("RemoveFromCart", "Customer")',
+        type: 'POST',
+        data: {
+            itemId: itemId
+        },
+        headers: {
+            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+        },
+        success: function(response) {
+            if (response.success) {
+                loadCart();
+                updateCartCount();
+                updateCartTotal(response.newTotal);
+            } else {
+                alert(response.message || 'Error removing item');
+            }
+        },
+        error: function() {
+            alert('Error removing item');
+        }
+    });
+});
+        });
+    </script>
+}

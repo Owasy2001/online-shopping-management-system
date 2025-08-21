@@ -1,0 +1,65 @@
+﻿@model Zaptech.Models.Coupon
+
+@{
+    ViewBag.Title = "Edit Coupon";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2>Edit Coupon</h2>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(m => m.Id)
+
+    <div class="mb-3">
+        @Html.LabelFor(m => m.Code)
+        @Html.TextBoxFor(m => m.Code, new { @class = "form-control", placeholder = "Enter Coupon Code" })
+        @Html.ValidationMessageFor(m => m.Code, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="mb-3">
+        @Html.LabelFor(m => m.DiscountType)
+        @Html.DropDownListFor(m => m.DiscountType, new SelectList(new[] { "Percentage", "FixedAmount" }, Model.DiscountType), "-- Select Discount Type --", new { @class = "form-select" })
+        @Html.ValidationMessageFor(m => m.DiscountType, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="mb-3">
+        @Html.LabelFor(m => m.DiscountValue)
+        @Html.TextBoxFor(m => m.DiscountValue, new { @class = "form-control", type = "number", step = "0.01" })
+        @Html.ValidationMessageFor(m => m.DiscountValue, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="mb-3">
+        @Html.LabelFor(m => m.MinimumOrderAmount)
+        @Html.TextBoxFor(m => m.MinimumOrderAmount, new { @class = "form-control", type = "number", step = "0.01" })
+        @Html.ValidationMessageFor(m => m.MinimumOrderAmount, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            @Html.LabelFor(m => m.StartDate)
+            @Html.TextBoxFor(m => m.StartDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+            @Html.ValidationMessageFor(m => m.StartDate, "", new { @class = "text-danger" })
+        </div>
+        <div class="col-md-6 mb-3">
+            @Html.LabelFor(m => m.EndDate)
+            @Html.TextBoxFor(m => m.EndDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+            @Html.ValidationMessageFor(m => m.EndDate, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="mb-3">
+        @Html.LabelFor(m => m.MaxUses)
+        @Html.TextBoxFor(m => m.MaxUses, new { @class = "form-control", type = "number" })
+        @Html.ValidationMessageFor(m => m.MaxUses, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-check mb-3">
+        @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input" })
+        @Html.LabelFor(m => m.IsActive, new { @class = "form-check-label" })
+    </div>
+
+    <button type="submit" class="btn btn-success">Update Coupon</button>
+    <a href="@Url.Action("Index")" class="btn btn-secondary">Cancel</a>
+}

@@ -1,0 +1,57 @@
+﻿
+
+
+@model Zaptech.Models.Category
+
+@{
+    ViewBag.Title = "Edit";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2>@ViewBag.Title</h2>
+
+@using (Html.BeginForm("Edit", "AdminCategories", FormMethod.Post, new { enctype = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.Hidden("id", Model.Id)
+
+    <div class="form-group">
+        <label for="Name">Name</label>
+        <input type="text" name="Name" value="@Model.Name" class="form-control" required />
+    </div>
+
+    <div class="form-group">
+        <label for="Status">Status</label>
+        <select name="Status" class="form-control">
+            <option value="Active" @(Model.Status == "Active" ? "selected" : "")>Active</option>
+            <option value="Inactive" @(Model.Status == "Inactive" ? "selected" : "")>Inactive</option>
+            <option value="Archived" @(Model.Status == "Archived" ? "selected" : "")>Archived</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Current Image</label><br />
+        @{
+            var path = Model.GetType().GetProperty("ImagePath")?.GetValue(Model) as string;
+        }
+        @if (!string.IsNullOrEmpty(path))
+        {
+            <img src="@path" alt="Category Image" style="max-height: 100px;" />
+        }
+        else
+        {
+            <p class="text-muted">No image uploaded</p>
+        }
+    </div>
+
+    <div class="form-group">
+        <label for="ImageFile">Replace Image</label>
+        <input type="file" name="ImageFile" class="form-control-file" />
+        <small class="form-text text-muted">Leave blank to keep the current image.</small>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+    @Html.ActionLink("Cancel", "Index", null, new { @class = "btn btn-secondary ml-2" })
+}
+
+

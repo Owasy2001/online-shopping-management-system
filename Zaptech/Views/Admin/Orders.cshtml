@@ -1,0 +1,140 @@
+﻿@model PagedList.IPagedList<Zaptech.Models.Order>
+@using PagedList.Mvc;
+
+@{
+    ViewBag.Title = "Orders";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<!-- ✅ Enhanced Styling for All Badges -->
+<style>
+    .badge-success {
+        background-color: #28a745;
+        color: #fff;
+    }
+
+    .badge-warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
+
+    .badge-danger {
+        background-color: #dc3545;
+        color: #fff;
+    }
+
+    .badge-info {
+        background-color: #17a2b8;
+        color: #fff;
+    }
+
+    .badge-secondary {
+        background-color: #6c757d;
+        color: #fff;
+    }
+</style>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Order Management</h6>
+    </div>
+    <div class="card-body">
+        @using (Html.BeginForm("Orders", "Admin", FormMethod.Get))
+        {
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    @Html.TextBox("searchString", ViewBag.CurrentFilter as string, new { @class = "form-control", placeholder = "Search orders..." })
+                </div>
+                <div class="col-md-2">
+                    @Html.DropDownList("statusFilter", ViewBag.StatusList as SelectList, "All Status", new { @class = "form-control" })
+                </div>
+                <div class="col-md-2">
+                    <input type="date" name="fromDate" class="form-control" value="@ViewBag.FromDate?.ToString(" yyyy-MM-dd")" placeholder="From Date" />
+                </div>
+                <div class="col-md-2">
+                    <input type="date" name="toDate" class="form-control" value="@ViewBag.ToDate?.ToString(" yyyy-MM-dd")" placeholder="To Date" />
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </div>
+            </div>
+        }
+
+        <div class="table-responsive">
+            <table class="table table-bordered" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model)
+                    {
+                        <tr>
+                            <td>@order.Id</td>
+                            <td>@order.User.Name</td>
+                            <td>@order.Order_date.ToString("MMM dd, yyyy")</td>
+                            <td>$@order.Total_ammount.ToString("N2")</td>
+                            <td>
+                                @if (order.Payment != null)
+                                {
+                                    <span class="badge badge-@(order.Payment.Status == "Paid" ? "success" :
+                                                              order.Payment.Status == "Refunded" ? "warning" :
+                                                              order.Payment.Status == "Pending" ? "info" : "danger")">
+                                        @order.Payment.Status
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge badge-@(order.Status == "Completed" ? "success" :
+                                                           order.Status == "Processing" ? "info" :
+                                                           order.Status == "Cancelled" ? "danger" :
+                                                           order.Status == "Refund Requested" ? "warning" : "secondary")">
+                                    @order.Status
+                                </span>
+                            </td>
+                            <td>
+                                <a href="@Url.Action("OrderDetails", new { id = order.Id })" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                @if (order.Status == "Refund Requested")
+                                {
+                                    <button class="btn btn-sm btn-primary process-refund" data-orderid="@order.Id">
+                                        <i class="fas fa-exchange-alt"></i> Process
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+        @Html.PagedListPager(Model, page => Url.Action("Orders", new
+        {
+            page,
+            searchString = ViewBag.CurrentFilter,
+            statusFilter = ViewBag.StatusFilter,
+            fromDate = ViewBag.FromDate,
+            toDate = ViewBag.ToDate
+        }))
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.process-refund').click(function () {
+                var orderId = $(this).data('orderid');
+                window.location.href = '@Url.Action("RefundRequests")?orderId=' + orderId;
+            });
+        });
+    </script>
+}

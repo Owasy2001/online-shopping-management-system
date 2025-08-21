@@ -1,0 +1,202 @@
+﻿@model PagedList.IPagedList<Zaptech.Models.Product>
+@using PagedList.Mvc;
+@{
+    ViewBag.Title = "Manage Users";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Banner Styles */
+    .product-banner {
+        background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('/Images/product_banner.jpg') no-repeat center center;
+        background-size: cover;
+        padding: 100px 0;
+        margin-bottom: 50px;
+    }
+
+    .banner-content {
+        animation: fadeIn 1.5s ease-in-out;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Product Card Styles */
+    .product-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-radius: 10px;
+        overflow: hidden;
+        border: none;
+    }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+    .product-image {
+        height: 200px;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .product-card:hover .product-image {
+        transform: scale(1.05);
+    }
+
+    /* Product Details Styles */
+    .product-detail-image {
+        max-height: 500px;
+        object-fit: contain;
+        border-radius: 10px;
+    }
+
+    .rating {
+        font-size: 1rem;
+    }
+
+    /* Pagination Styles */
+    .pagination-container {
+        margin-top: 30px;
+    }
+
+    .pagination > li > a,
+    .pagination > li > span {
+        color: #495057;
+        border: 1px solid #dee2e6;
+        margin: 0 5px;
+        border-radius: 5px !important;
+    }
+
+    .pagination > .active > a,
+    .pagination > .active > span {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    /* Responsive Adjustments */
+    @@media (max-width: 768px) {
+        .product-banner {
+            padding: 60px 0;
+        }
+
+        .banner-content h1 {
+            font-size: 2rem;
+        }
+
+        .banner-content p {
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<!-- Banner Section -->
+<section class="product-banner">
+    <div class="container">
+        <div class="banner-content text-center text-white">
+            <h1 class="display-4">Discover Amazing Products</h1>
+            <p class="lead">Find the perfect items for your needs at the best prices</p>
+        </div>
+    </div>
+</section>
+
+<!-- Main Content -->
+<div class="container mt-5">
+    <!-- Search and Filter Section -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            @using (Html.BeginForm("Index", "CustomerProducts", FormMethod.Get, new { @class = "form-inline", id = "searchForm" }))
+            {
+                <div class="row">
+                    <!-- Search Box -->
+                    <div class="col-md-4 mb-3">
+                        <div class="input-group">
+                            @Html.TextBox("searchString", ViewBag.CurrentFilter as string, new { @class = "form-control", placeholder = "Search by name or category", id = "searchInput" })
+                            <div class="input-group-append">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Filter -->
+                    <div class="col-md-3 mb-3">
+                        @Html.DropDownList("categoryFilter", new SelectList(ViewBag.Categories), "All Categories", new { @class = "form-control", id = "categoryFilter" })
+                    </div>
+
+                    <!-- Price Range -->
+                    <div class="col-md-3 mb-3">
+                        <div class="input-group">
+                            @Html.TextBox("minPrice", ViewBag.MinPrice as string, new { @class = "form-control", placeholder = "Min price", type = "number" })
+                            @Html.TextBox("maxPrice", ViewBag.MaxPrice as string, new { @class = "form-control", placeholder = "Max price", type = "number" })
+                        </div>
+                    </div>
+
+                    <!-- Sort Options -->
+                    <div class="col-md-2 mb-3">
+                        @Html.DropDownList("sortOrder", new List<SelectListItem>
+                        {
+                            new SelectListItem { Text = "Name (A-Z)", Value = "" },
+                            new SelectListItem { Text = "Name (Z-A)", Value = "name_desc" },
+                            new SelectListItem { Text = "Price (Low-High)", Value = "Price" },
+                            new SelectListItem { Text = "Price (High-Low)", Value = "price_desc" }
+                        }, new { @class = "form-control", id = "sortOrder" })
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="row" id="productsContainer">
+        @foreach (var item in Model)
+        {
+            <div class="col-lg-4 col-md-6 mb-4">
+                @Html.Partial("_ProductCard", item)
+            </div>
+        }
+    </div>
+
+    <!-- Pagination -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="text-center">
+                Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+                @Html.PagedListPager(Model, page => Url.Action("Index", new { page, searchString = ViewBag.CurrentFilter, categoryFilter = ViewBag.CategoryFilter, minPrice = ViewBag.MinPrice, maxPrice = ViewBag.MaxPrice, sortOrder = ViewBag.CurrentSort }), PagedListRenderOptions.ClassicPlusFirstAndLast)
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // AJAX search functionality
+            $('#searchInput, #categoryFilter, #sortOrder, [name="minPrice"], [name="maxPrice"]').on('input change', function () {
+                var form = $('#searchForm');
+                $.ajax({
+                    url: form.attr('action'),
+                    type: form.attr('method'),
+                    data: form.serialize(),
+                    success: function (result) {
+                        var html = $(result).find('#productsContainer').html();
+                        $('#productsContainer').html(html);
+
+                        var pagination = $(result).find('.pagination-container').html();
+                        $('.pagination-container').html(pagination);
+                    }
+                });
+            });
+        });
+    </script>
+}

@@ -1,0 +1,119 @@
+﻿@model Zaptech.Models.User
+@{
+    ViewBag.Title = "User Details";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">User Details</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="@Url.Action("Users")" class="btn btn-sm btn-outline-secondary">Back to List</a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Basic Information</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Name:</dt>
+                    <dd class="col-sm-8">@Model.Name</dd>
+
+                    <dt class="col-sm-4">Email:</dt>
+                    <dd class="col-sm-8">@Model.Email</dd>
+
+                    <dt class="col-sm-4">Role:</dt>
+                    <dd class="col-sm-8">@Model.Role</dd>
+
+                    <dt class="col-sm-4">Status:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger")">
+                            @(Model.IsActive ? "Active" : "Blocked")
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-4">Address:</dt>
+                    <dd class="col-sm-8">@(Model.Address ?? "N/A")</dd>
+
+                    <dt class="col-sm-4">Phone:</dt>
+                    <dd class="col-sm-8">@(Model.Phone ?? "N/A")</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Account Actions</h5>
+            </div>
+            <div class="card-body">
+                @using (Html.BeginForm("ToggleUserStatus", "Admin", new { id = Model.Id }, FormMethod.Post))
+                {
+                    <button type="submit" class="btn @(Model.IsActive ? "btn-warning" : "btn-success") mb-2">
+                        @(Model.IsActive ? "Block User" : "Activate User")
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5>Purchase History</h5>
+    </div>
+    <div class="card-body">
+        @if (Model.Orders.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Items</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.Orders.OrderByDescending(o => o.Order_date))
+                        {
+                            <tr>
+                                <td>@order.Id</td>
+                                <td>@order.Order_date.ToString("dd MMM yyyy")</td>
+                                <td>$@order.Total_ammount</td>
+                                <td>
+                                    <span class="badge @(order.Status == "Completed" ? "bg-success" :
+                                                  order.Status == "Processing" ? "bg-warning" :
+                                                  order.Status == "Cancelled" ? "bg-danger" : "bg-primary")">
+                                        @order.Status
+                                    </span>
+                                </td>
+                                <td>
+                                    @foreach (var item in order.OrderItems.Take(3))
+                                    {
+                                        <span class="badge bg-light text-dark">@item.Product.Name (x@(item.Quantity))</span>
+                                    }
+                                    @if (order.OrderItems.Count > 3)
+                                    {
+                                        <span class="badge bg-secondary">+@(order.OrderItems.Count - 3) more</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info">No orders found for this user.</div>
+        }
+    </div>
+</div>

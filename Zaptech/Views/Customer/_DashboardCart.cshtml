@@ -1,0 +1,136 @@
+﻿@model Zaptech.Models.Order
+
+@{
+    // Convert all float values to decimal at the start
+    decimal totalAmount = (decimal)Model.Total_ammount;
+    decimal discountAmount = 0;
+    decimal finalTotal = totalAmount;
+
+    // Check if there is a coupon applied
+    if (Model.Coupon != null)
+    {
+        decimal couponValue = (decimal)Model.Coupon.DiscountValue;
+
+        if (Model.Coupon.DiscountType == "Percentage")
+        {
+            // Apply percentage discount
+            discountAmount = totalAmount * (couponValue / 100m);
+        }
+        else
+        {
+            // Apply fixed value discount
+            discountAmount = couponValue;
+        }
+
+        // Calculate final total after discount
+        finalTotal = totalAmount - discountAmount;
+    }
+}
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-cart3"></i> Shopping Cart</h5>
+    </div>
+    <div class="card-body">
+        @if (Model.OrderItems != null && Model.OrderItems.Any())
+        {
+            
+            <form asp-action="DeleteAllCartItems" asp-controller="Customer" method="post" class="mb-3">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-danger w-100" onclick="return confirm('Are you sure you want to remove all items from your cart?');">
+                    <i class="bi bi-trash"></i> Delete All Items
+                </button>
+            </form>
+
+            <div class="list-group list-group-flush mb-3">
+                @foreach (var item in Model.OrderItems)
+                {
+                    <div class="list-group-item border-0 px-0 py-3">
+                        <div class="d-flex justify-content-between">
+                            <div class="d-flex">
+                                @if (!string.IsNullOrEmpty(item.Product.Image))
+                                {
+                                    <img src="@item.Product.Image" alt="@item.Product.Name" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                }
+                                <div>
+                                    <h6 class="mb-1">@item.Product.Name</h6>
+                                    <small class="text-muted">@item.Quantity x $@((decimal)item.Price)</small>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <h6 class="mb-1">$@(((decimal)item.Price * item.Quantity).ToString("0.00"))</h6>
+                                <div class="text-muted small">Qty: @item.Quantity</div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Coupon Application Form -->
+            <div class="mb-3">
+                @if (Model.Coupon != null)
+                {
+                    <div class="alert alert-success d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-tag-fill me-2"></i>
+                            <strong>@Model.Coupon.Code</strong> applied
+                            (@(Model.Coupon.DiscountType == "Percentage" ? $"{Model.Coupon.DiscountValue}%" : $"${Model.Coupon.DiscountValue:0.00}") off)
+                        </div>
+                        <button id="remove-coupon" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="coupon-code" placeholder="Enter coupon code">
+                        <button class="btn btn-primary" id="apply-coupon">Apply</button>
+                    </div>
+                    <div id="coupon-message" class="small mt-1"></div>
+                }
+            </div>
+
+            <div class="border-top pt-3">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Subtotal:</span>
+                    <span>$@totalAmount.ToString("0.00")</span>
+                </div>
+
+                @if (Model.Coupon != null)
+                {
+                    <div class="d-flex justify-content-between mb-2 text-success">
+                        <span>Discount:</span>
+                        <span>-$@discountAmount.ToString("0.00")</span>
+                    </div>
+                }
+
+                <div class="d-flex justify-content-between fw-bold fs-5">
+                    <span>Total:</span>
+                    <span>$@finalTotal.ToString("0.00")</span>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2 mt-4">
+                <a href="@Url.Action("Checkout")" class="btn btn-primary rounded-pill">
+                    <i class="bi bi-credit-card me-2"></i> Proceed to Checkout
+                </a>
+                <a href="@Url.Action("Index", "CustomerProducts")" class="btn btn-outline-primary rounded-pill">
+                    <i class="bi bi-cart-plus me-2"></i> Continue Shopping
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-3">
+                <i class="bi bi-cart-x text-muted" style="font-size: 2rem;"></i>
+                <p class="mt-2">Your cart is empty</p>
+                <a href="@Url.Action("Index", "CustomerProducts")" class="btn btn-primary rounded-pill px-4">
+                    <i class="bi bi-cart-plus me-2"></i> Start Shopping
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+

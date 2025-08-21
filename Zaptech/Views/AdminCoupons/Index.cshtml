@@ -1,0 +1,92 @@
+﻿@model PagedList.IPagedList<Zaptech.Models.Coupon>
+@using PagedList.Mvc;
+@{
+    ViewBag.Title = "Coupon Management";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Coupon Management</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="@Url.Action("Create")" class="btn btn-sm btn-success">
+                <i class="bi bi-plus-circle"></i> Add New
+            </a>
+            <a href="@Url.Action("ExportCouponsPDF")" class="btn btn-sm btn-danger">
+                <i class="bi bi-file-pdf"></i> Export
+            </a>
+
+        </div>
+    </div>
+</div>
+
+@using (Html.BeginForm("Index", "AdminCoupons", FormMethod.Get))
+{
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <select name="statusFilter" class="form-select" onchange="this.form.submit()">
+                <option value="">All Coupons</option>
+                <option value="Active" @(ViewBag.StatusFilter == "Active" ? "selected" : "")>Active</option>
+                <option value="Inactive" @(ViewBag.StatusFilter == "Inactive" ? "selected" : "")>Inactive</option>
+            </select>
+        </div>
+    </div>
+}
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Discount</th>
+                <th>Valid From</th>
+                <th>Valid To</th>
+                <th>Uses</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var coupon in Model)
+            {
+                <tr>
+                    <td><strong>@coupon.Code</strong></td>
+                    <td>
+                        @if (coupon.DiscountType == "Percentage")
+                        {
+                            @($"{coupon.DiscountValue}%")
+                        }
+                        else
+                        {
+                            @($"{coupon.DiscountValue:C}")
+                        }
+                    </td>
+                    <td>@coupon.StartDate.ToString("d MMM yyyy")</td>
+                    <td>@coupon.EndDate.ToString("d MMM yyyy")</td>
+                    <td>@coupon.CurrentUses / @(coupon.MaxUses?.ToString() ?? "∞")</td>
+                    <td>
+                        <span class="badge @(coupon.IsActive ? "bg-success" : "bg-secondary")">
+                            @(coupon.IsActive ? "Active" : "Inactive")
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="@Url.Action("Edit", new { id = coupon.Id })" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form action="@Url.Action("ToggleStatus", new { id = coupon.Id })" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn @(coupon.IsActive ? "btn-warning" : "btn-success")">
+                                    <i class="bi @(coupon.IsActive ? "bi-x-circle" : "bi-check-circle")"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+@Html.PagedListPager(Model, page => Url.Action("Index", new { page, statusFilter = ViewBag.StatusFilter }))

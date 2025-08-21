@@ -1,0 +1,53 @@
+﻿
+
+
+@model Zaptech.Models.Category
+
+@{
+    ViewBag.Title = "Delete";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2 class="text-danger">Delete Confirmation</h2>
+
+<div class="alert alert-warning">
+    <strong>Warning!</strong> This action cannot be undone.
+</div>
+
+<div>
+    <dl class="row">
+        <dt class="col-sm-3">Name</dt>
+        <dd class="col-sm-9">@Model.Name</dd>
+
+        <dt class="col-sm-3">Status</dt>
+        <dd class="col-sm-9">@Model.Status</dd>
+
+        <dt class="col-sm-3">Image</dt>
+        <dd class="col-sm-9">
+            @{
+                var imagePath = Model.GetType().GetProperty("ImagePath")?.GetValue(Model) as string;
+            }
+            @if (!string.IsNullOrEmpty(imagePath))
+            {
+                <img src="@imagePath" alt="@Model.Name" style="max-height: 100px;" />
+            }
+            else
+            {
+                <span class="text-muted">No image available</span>
+            }
+        </dd>
+    </dl>
+
+    @using (Html.BeginForm("DeleteConfirmed", "AdminCategories", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        @Html.Hidden("id", Model.Id)
+
+        <div class="form-group">
+            <input type="submit" value="Delete" class="btn btn-danger" />
+            @Html.ActionLink("Cancel", "Index", null, new { @class = "btn btn-secondary ml-2" })
+        </div>
+    }
+</div>
+
+

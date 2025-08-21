@@ -1,0 +1,76 @@
+﻿@model Zaptech.Models.AddReviewViewModel
+
+@{
+    ViewBag.Title = "Add Review";
+}
+
+<div class="container mt-4">
+    <h2>Review @Model.ProductName</h2>
+
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-warning">@TempData["Message"]</div>
+    }
+
+    <div class="row">
+        <div class="col-md-4">
+            <img src="@Model.ProductImage" alt="@Model.ProductName" class="img-thumbnail" style="max-height: 200px;" />
+        </div>
+        <div class="col-md-8">
+            @using (Html.BeginForm())
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(model => model.OrderItemId)
+                @Html.HiddenFor(model => model.ProductId)
+
+                <div class="form-group">
+                    <label>Rating</label>
+                    <div class="rating-stars">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <input type="radio" id="star@i" name="Rating" value="@i" @(Model.Rating == i ? "checked" : "") />
+                            <label for="star@i" class="star">★</label>
+                        }
+                    </div>
+                    @Html.ValidationMessageFor(model => model.Rating, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(model => model.Comment, htmlAttributes: new { @class = "control-label" })
+                    @Html.TextAreaFor(model => model.Comment, new { @class = "form-control", rows = 5 })
+                    @Html.ValidationMessageFor(model => model.Comment, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="form-group">
+                    <input type="submit" value="Submit Review" class="btn btn-primary" />
+                    @Html.ActionLink("Cancel", "OrderHistory", null, new { @class = "btn btn-secondary" })
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .rating-stars {
+        unicode-bidi: bidi-override;
+        direction: rtl;
+        font-size: 30px;
+    }
+
+        .rating-stars input {
+            display: none;
+        }
+
+        .rating-stars label {
+            display: inline-block;
+            padding: 0 5px;
+            color: #ccc;
+            cursor: pointer;
+        }
+
+            .rating-stars input:checked ~ label,
+            .rating-stars label:hover,
+            .rating-stars label:hover ~ label {
+                color: gold;
+            }
+</style>

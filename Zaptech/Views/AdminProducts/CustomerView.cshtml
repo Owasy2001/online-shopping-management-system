@@ -1,0 +1,141 @@
+﻿@model IEnumerable<Zaptech.Models.Product>
+
+@{
+    ViewBag.Title = "Customer View - Products";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml"; // Ensure it uses admin layout
+}
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h3 class="card-title">
+            <i class="fas fa-eye"></i> Customer View - Products
+        </h3>
+        <div class="card-tools">
+            <a href="@Url.Action("Index")" class="btn btn-light">
+                <i class="fas fa-arrow-left"></i> Back to Admin
+            </a>
+        </div>
+    </div>
+
+    <div class="card-body">
+        @if (!Model.Any())
+        {
+            <div class="alert alert-info">
+                No active products available to display.
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                @foreach (var product in Model)
+                {
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card h-100 product-card">
+                            @if (!string.IsNullOrEmpty(product.Image))
+                            {
+                                <div class="product-image-container">
+                                    <img src="@product.Image" class="card-img-top product-image" alt="@product.Name">
+                                    @if (product.IsFeatured)
+                                    {
+                                        <span class="featured-badge">Featured</span>
+                                    }
+                                </div>
+                            }
+                            <div class="card-body">
+                                <h5 class="card-title">@product.Name</h5>
+                                <p class="card-text text-muted brand-text">@product.Brand_Name</p>
+                                <p class="card-text description-text">
+                                    @(product.Description.Length > 100 ?
+                                      product.Description.Substring(0, 100) + "..." :
+                                      product.Description)
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0 text-primary price-text">$@product.Price.ToString("N2")</h5>
+                                    <span class="badge @(product.Stock > 0 ? "badge-success" : "badge-danger") stock-badge">
+                                        @(product.Stock > 0 ? "In Stock" : "Out of Stock")
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-white">
+                                <div class="btn-group w-100">
+                                    <a href="#" class="btn btn-outline-primary">
+                                        <i class="fas fa-info-circle"></i> Details
+                                    </a>
+                                    <a href="#" class="btn btn-primary">
+                                        <i class="fas fa-shopping-cart"></i> Add to Cart
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="card-footer">
+        <small class="text-muted">
+            Showing @Model.Count() active products
+        </small>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .product-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+            .product-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            }
+
+        .product-image-container {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .product-image {
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
+        }
+
+        .featured-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #ffc107;
+            color: #212529;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .brand-text {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .description-text {
+            font-size: 14px;
+            color: #495057;
+            margin-bottom: 15px;
+        }
+
+        .price-text {
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .stock-badge {
+            font-size: 12px;
+            padding: 5px 8px;
+        }
+    </style>
+}
